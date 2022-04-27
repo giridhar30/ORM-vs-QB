@@ -62,6 +62,14 @@ app.get('/orm/groupByTeam', async (req,res) => {
     res.json(data);
 });
 
+app.get('/orm/joinTables',async (req,res)=>{
+    //orders records by salary in increasing order
+    const employees = await db.employee.findAll({ order:['salary'],include: db.team });
+    console.log(employees);
+    // res.json(JSON.stringify(employees,null,2))
+    res.json(employees);
+})
+
 app.get('/qb/createTables', async (req, res) => {
 
     try {
@@ -220,6 +228,16 @@ app.get("/qb/orderBySalary", async (req, res) => {
 app.get("/qb/groupByTeam", async (req, res) => {
     const rs = await knex.select('teamTid', knex.raw('COUNT(teamTid) AS countPerTeam')).from('employees').groupBy('teamTid');
     res.json(rs);
+})
+
+app.get('/qb/joinTables',async (req,res)=>{
+    const result = await knex('employee_qb')
+  .join('team_qb')
+  .orderBy('salary')
+//   .groupBy('team_qb.tname')
+  .select('employee_qb.ename','team_qb.tname','employee_qb.salary');
+  console.log(result);
+    res.json(result);
 })
 
 app.listen(process.env.PORT, () => console.log(`app running on port ${process.env.PORT}`));
