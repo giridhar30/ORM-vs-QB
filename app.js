@@ -22,6 +22,23 @@ app.delete('/orm/dropTables', (req, res) => {
     res.send("dropped");
 });
 
+/*ORM - OrderBy Salary in Increasing order*/
+app.get('/orm/orderBySalary', (req, res) => {
+    db.employee.findAll({
+        attributes: ["eid", "ename", "email", "designation", "salary"],
+        order: ["salary"]
+    }).then(data => res.json(data));
+});
+
+/*ORM - GroupBy Team Id*/
+app.get('/orm/groupByTeam', async (req,res) => {
+    const data = await db.employee.findAll({
+        attributes: ["teamTid", [db.sequelize.fn("COUNT", db.sequelize.col("teamTid")), "countPerTeam"]],
+        group: "teamTid"
+    });
+    res.json(data);
+});
+
 app.get('/qb/createTables', async (req, res) => {
 
     try {
@@ -56,5 +73,17 @@ app.delete('/qb/dropTables', async (req, res) => {
     await knex.schema.dropTableIfExists('team_qb');
     res.send("dropped tables");
 });
+
+/* QueryBuilder - OrderBy Salary in Increasing order*/
+app.get("/qb/orderBySalary", async (req, res) => {
+    const rs = await knex('employee_qb').orderBy('salary');
+    res.json(rs);
+});
+
+/* QueryBuilder - GroupBy Team*/
+app.get("/qb/groupByTeam", async (req, res) => {
+    const rs = await knex.select('teamTid', knex.raw('COUNT(teamTid) AS countPerTeam')).from('employees').groupBy('teamTid');
+    res.json(rs);
+})
 
 app.listen(process.env.PORT, () => console.log(`app running on port ${process.env.PORT}`));
