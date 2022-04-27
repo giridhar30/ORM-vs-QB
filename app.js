@@ -10,6 +10,8 @@ const knex = require('./qb/db-config');
 
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true }));
+
 app.get('/', (req, res) => res.send("working!"));
 
 app.get('/orm/employee', (req, res) => {
@@ -103,6 +105,93 @@ app.get('/qb/displayemp', async(req,res) =>{
         // .select('title', 'author', 'year')
     res.json(emp)
 })
+=======
+app.put('/orm/employee/:id', (req, res) => {
+    db.employee.update(req.body, {
+        where: { eid: req.params.id }
+    })
+    .then(data => data ? res.json({ message: "updated" }) : res.json({ message: "not found" }))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+app.delete('/orm/employee/:id', (req, res) => {
+    db.employee.destroy({
+        where: { eid: req.params.id }
+    })
+    .then(data => data ? res.json("Deleted Successfully") : res.send("no data found"))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+app.put('/orm/team/:id', (req, res) => {
+    db.team.update(req.body, {
+        where: { tid: req.params.id }
+    })
+    .then(data => data ? res.json({ message: "updated" }) : res.json({ message: "not found" }))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+app.delete('/orm/team/:id', (req, res) => {
+    db.team.destroy({
+        where: { tid: req.params.id }
+    })
+    .then(data => data ? res.json({ message: "Team deleted" }) : res.json({ message: "Team not found" }))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+
+app.put('/qb/employee/:id', async (req, res) => {
+    await knex('employee_qb').where('id', req.params.id).update(req.body).then(data => data ? res.json({ message: "updated" }) : res.json({ message: "not found" }))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+app.delete('/qb/employee/:id', async (req, res) => {
+    await knex('employee_qb').where('id', req.params.id).del().then(data => data ? res.json({ message: "Deleted Successfully" }) : res.send("no data found"))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+app.put('/qb/team/:id', async (req, res) => {
+    await knex('team_qb').where('id', req.params.id).update(req.body).then(data => data ? res.json({ message: "updated" }) : res.json({ message: "not found" }))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+app.delete('/qb/team/:id', async (req, res) => {
+    await knex('team_qb').where('id', req.params.id).del().then(data => data ? res.json({ message: "Deleted Successfully" }) : res.send("no data found"))
+    .catch(err => {
+        console.log(err)
+        res.json(err)
+    }
+    );
+})
+
+
 
 
 app.listen(process.env.PORT, () => console.log(`app running on port ${process.env.PORT}`));
