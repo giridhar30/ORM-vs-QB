@@ -22,6 +22,27 @@ app.delete('/orm/dropTables', (req, res) => {
     res.send("dropped");
 });
 
+// insert a employee
+app.post('/orm/insert',async(req,res)=>{
+    var name = req.body.ename;
+    var email =  req.body.email;
+    var designation = req.body.designation;
+    var salary = parseInt(req.body.salary);
+    var teamid = parseInt(req.body.teamid);
+    console.log(name);
+    const employee = await db.employee
+                    .create({ ename: name, email:email, designation: designation , salary:salary , teamTid: teamid });
+    res.send("Record added !!");
+})
+// Display all employees 
+app.get('/orm/displayemp', async(req,res) =>{
+    
+    const employee = await db.employee.findAll();
+    console.log(employee.every(emp => emp instanceof db.employee));
+    console.log("All employees:", JSON.stringify(employee, null, 2));
+    res.json(employee);
+})
+
 app.get('/qb/createTables', async (req, res) => {
 
     try {
@@ -56,5 +77,32 @@ app.delete('/qb/dropTables', async (req, res) => {
     await knex.schema.dropTableIfExists('team_qb');
     res.send("dropped tables");
 });
+
+// insert a employee
+app.post('/qb/insert',async(req,res)=>{
+    var name = req.body.ename;
+    var email =  req.body.email;
+    var designation = req.body.designation;
+    var salary = parseInt(req.body.salary);
+    var teamid = parseInt(req.body.teamid);
+   await knex('employee_qb').insert( 
+                                    [{   ename: name, 
+                                         email: email, 
+                                         designation: designation,
+                                         salary: salary,
+                                         team_id:teamid 
+                                    }] 
+                                    )
+    res.send("Record added !!");
+})
+
+//display all employees
+app.get('/qb/displayemp', async(req,res) =>{
+    const emp =  await knex
+        .from('employee_qb')
+        // .select('title', 'author', 'year')
+    res.json(emp)
+})
+
 
 app.listen(process.env.PORT, () => console.log(`app running on port ${process.env.PORT}`));
