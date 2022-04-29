@@ -3,8 +3,7 @@ const app = express();
 
 require('dotenv/config');
 
-const db = require('./orm/db-config');
-db.sequelize.sync();
+const db = require('./models');
 
 const knex = require('./qb/db-config');
 
@@ -12,7 +11,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // home
-app.get('/', (req, res) => res.send("working!"));
+app.get('/', (req, res) => {
+    res.json("Working");
+});
 
 /*
  *  CREATING AND DROPPING TABLES 
@@ -20,8 +21,8 @@ app.get('/', (req, res) => res.send("working!"));
 
 // ORM - drop tables
 app.delete('/orm/dropTables', (req, res) => {
-    db.employee.drop();
-    db.team.drop();
+    db.Employee.drop();
+    db.Team.drop();
     res.send("dropped");
 });
 
@@ -72,9 +73,9 @@ app.post('/orm/insert',async(req,res)=>{
     var email =  req.body.email;
     var designation = req.body.designation;
     var salary = parseInt(req.body.salary);
-    var teamid = parseInt(req.body.teamid);
+    var teamid = parseInt(req.body.teamTid);
     console.log(name);
-    const employee = await db.employee
+    const employee = await db.Employee
                     .create({ ename: name, email:email, designation: designation , salary:salary , teamTid: teamid });
     res.send("Record added !!");
 })
@@ -99,7 +100,7 @@ app.post('/qb/insert',async(req,res)=>{
 
 // ORM - Display all employees 
 app.get('/orm/employee', async(req,res) =>{
-    const employee = await db.employee.findAll();
+    const employee = await db.Employee.findAll();
     res.json(employee);
 })
 
@@ -117,7 +118,7 @@ app.get('/qb/employee', async(req,res) =>{
 
 // ORM - update employee
 app.put('/orm/employee/:id', (req, res) => {
-    db.employee.update(req.body, {
+    db.Employee.update(req.body, {
         where: { eid: req.params.id }
     })
     .then(data => data ? res.json({ message: "updated" }) : res.json({ message: "not found" }))
@@ -130,7 +131,7 @@ app.put('/orm/employee/:id', (req, res) => {
 
 // ORM - delete employee
 app.delete('/orm/employee/:id', (req, res) => {
-    db.employee.destroy({
+    db.Employee.destroy({
         where: { eid: req.params.id }
     })
     .then(data => data ? res.json("Deleted Successfully") : res.send("no data found"))
@@ -143,7 +144,7 @@ app.delete('/orm/employee/:id', (req, res) => {
 
 // ORM - update team
 app.put('/orm/team/:id', (req, res) => {
-    db.team.update(req.body, {
+    db.Team.update(req.body, {
         where: { tid: req.params.id }
     })
     .then(data => data ? res.json({ message: "updated" }) : res.json({ message: "not found" }))
@@ -156,7 +157,7 @@ app.put('/orm/team/:id', (req, res) => {
 
 // ORM - delete team
 app.delete('/orm/team/:id', (req, res) => {
-    db.team.destroy({
+    db.Team.destroy({
         where: { tid: req.params.id }
     })
     .then(data => data ? res.json({ message: "Team deleted" }) : res.json({ message: "Team not found" }))
@@ -214,7 +215,7 @@ app.delete('/qb/team/:id', async (req, res) => {
 // ORM - join tables
 app.get('/orm/joinTables',async (req,res)=>{
     //orders records by salary in increasing order
-    const employees = await db.employee.findAll({ order:['salary'],include: db.team });
+    const employees = await db.Employee.findAll({ order:['salary'],include: db.Team });
     console.log(employees);
     // res.json(JSON.stringify(employees,null,2))
     res.json(employees);
@@ -236,7 +237,7 @@ app.get('/qb/joinTables',async (req,res)=>{
 
 // ORM - employee by Id
 app.get('/orm/employee/:eid', async(req, res) => {
-    const employee = await db.employee.findByPk(req.params.eid);
+    const employee = await db.Employee.findByPk(req.params.eid);
     
     if(employee === null){
         res.send("Employee not found with given id");            
@@ -247,7 +248,7 @@ app.get('/orm/employee/:eid', async(req, res) => {
 
 // ORM - team by Id
 app.get('/orm/team/:tid', async(req, res) => {
-    const team = await db.team.findByPk(req.params.tid);
+    const team = await db.Team.findByPk(req.params.tid);
     
     if(team === null){
         res.send("Team not found with given id");            
@@ -289,7 +290,7 @@ if(!team){
 
 // ORM - Aggregate functions
 app.get('/orm/employeeSalarySum', async(req, res) => {
-const salary = await db.employee.sum('salary'); 
+const salary = await db.Employee.sum('salary'); 
 
 if(salary === null){
     res.send("Sum not got");            
@@ -315,7 +316,7 @@ if(!salary){
 
 /*ORM - OrderBy Salary in Increasing order*/
 app.get('/orm/orderBySalary', (req, res) => {
-    db.employee.findAll({
+    db.Employee.findAll({
         attributes: ["eid", "ename", "email", "designation", "salary"],
         order: ["salary"]
     }).then(data => res.json(data));
@@ -329,7 +330,7 @@ app.get("/qb/orderBySalary", async (req, res) => {
 
 /*ORM - GroupBy Team Id*/
 app.get('/orm/groupByTeam', async (req,res) => {
-    const data = await db.employee.findAll({
+    const data = await db.Employee.findAll({
         attributes: ["teamTid", [db.sequelize.fn("COUNT", db.sequelize.col("teamTid")), "countPerTeam"]],
         group: "teamTid"
     });
